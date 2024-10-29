@@ -1,0 +1,15 @@
+<!-- templates/inventory/login.html -->
+
+{% extends 'inventory/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h2 class="mt-4">Login</h2>
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>
+<p class="mt-2">Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
+{% endblock %}
