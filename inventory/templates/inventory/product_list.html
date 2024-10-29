@@ -8,7 +8,7 @@
 <h1 class="mt-4">Product List</h1>
 <table class="table table-bordered" id="product-table">
     <thead class="thead-light">
-        <!-- Search and Sort Row -->
+        <!-- 搜索和排序行 -->
         <tr>
             <th>
                 Name
@@ -50,7 +50,7 @@
             </td>
         </tr>
         {% endfor %}
-        <!-- Add New Product Row -->
+        <!-- 添加新产品的行 -->
         <tr id="add-row">
             <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
             <td><input type="text" class="form-control form-control-sm" id="add-description" placeholder="Description"></td>
@@ -63,17 +63,17 @@
     </tbody>
 </table>
 
-<!-- Chart Container -->
-<div id="chart-container">
+<!-- 饼图容器 -->
+<div id="chart-container" style="width: 40%; margin: 20px auto;">
     <canvas id="inventory-chart"></canvas>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<!-- Include Chart.js for data visualization -->
+<!-- 引入Chart.js用于数据可视化 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Function to build table rows
+    // 构建表格行的函数
     function buildTableRows(products) {
         var tbody = '';
         if (products.length === 0) {
@@ -92,7 +92,7 @@
                 tbody += '</tr>';
             }
         }
-        // Keep the add row
+        // 保留添加行
         tbody += `
             <tr id="add-row">
                 <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
@@ -105,25 +105,25 @@
             </tr>
         `;
         $('#product-table tbody').html(tbody);
-        // After updating the table, rebind the chart
+        // 更新饼图
         renderChart(products);
     }
 
-    // Function to fetch products based on search and sort
+    // 根据搜索和排序参数获取产品数据的函数
     function fetchProducts() {
         var searchName = $('#search-name').val();
         var searchDescription = $('#search-description').val();
         var sortBy = '';
         var order = '';
 
-        // Get the active sort button
+        // 获取当前激活的排序按钮
         var sortBtn = $('.sort-btn.active');
         if (sortBtn.length > 0) {
             sortBy = sortBtn.data('sort');
             order = sortBtn.data('order');
         }
 
-        // If sort_reset-btn is clicked, reset sort
+        // 检查是否点击了重置排序按钮
         $('.sort-reset-btn').each(function(){
             if($(this).hasClass('active')){
                 sortBy = 'id';
@@ -150,7 +150,7 @@
         });
     }
 
-    // Function to render the pie chart
+    // 渲染饼图的函数
     function renderChart(products) {
         var ctx = document.getElementById('inventory-chart').getContext('2d');
         var labels = [];
@@ -163,7 +163,7 @@
             backgroundColors.push(getRandomColor());
         });
 
-        // Destroy existing chart if it exists
+        // 如果饼图已存在，先销毁
         if(window.inventoryChart instanceof Chart){
             window.inventoryChart.destroy();
         }
@@ -187,7 +187,7 @@
         });
     }
 
-    // Function to generate random colors for the pie chart
+    // 生成随机颜色的函数
     function getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
@@ -198,35 +198,35 @@
     }
 
     $(document).ready(function(){
-        // Handle Edit button click (delegated)
+        // 处理“Edit”按钮点击事件（委托）
         $('#product-table').on('click', '.edit-btn', function(){
             var row = $(this).closest('tr');
             var productId = row.data('id');
 
-            // If already in edit mode, do nothing
+            // 如果已经在编辑模式，跳过
             if(row.hasClass('editing')) return;
 
-            // Set editing flag
+            // 设置编辑标志
             row.addClass('editing');
 
-            // Get current values
+            // 获取当前值
             var name = row.find('.name').text();
             var description = row.find('.description').text();
             var price = row.find('.price').text();
             var quantity = row.find('.quantity').text();
 
-            // Replace text with input fields
+            // 将文本替换为输入框
             row.find('.name').html('<input type="text" class="form-control form-control-sm" value="' + name + '">');
             row.find('.description').html('<input type="text" class="form-control form-control-sm" value="' + description + '">');
             row.find('.price').html('<input type="number" step="0.01" class="form-control form-control-sm" value="' + price + '">');
             row.find('.quantity').html('<input type="number" class="form-control form-control-sm" value="' + quantity + '">');
 
-            // Change buttons
+            // 更改按钮文本和样式
             $(this).text('Save').removeClass('btn-info').addClass('btn-success save-btn');
             row.find('.delete-btn').text('Cancel').removeClass('btn-danger').addClass('btn-secondary cancel-btn');
         });
 
-        // Handle Save button click (delegated)
+        // 处理“Save”按钮点击事件（委托）
         $('#product-table').on('click', '.save-btn', function(){
             var row = $(this).closest('tr');
             var productId = row.data('id');
@@ -253,7 +253,7 @@
                 },
                 success: function(response){
                     if(response.status === 'success'){
-                        fetchProducts();  // Refresh table
+                        fetchProducts();  // 刷新表格
                     } else {
                         alert('Failed to save the product: ' + response.message);
                     }
@@ -261,14 +261,14 @@
             });
         });
 
-        // Handle Cancel button click (delegated)
+        // 处理“Cancel”按钮点击事件（委托）
         $('#product-table').on('click', '.cancel-btn', function(){
-            fetchProducts();  // Refresh table to cancel editing
+            fetchProducts();  // 刷新表格以取消编辑
         });
 
-        // Handle Delete button click (delegated)
+        // 处理“Delete”按钮点击事件（委托）
         $('#product-table').on('click', '.delete-btn', function(){
-            // Only handle delete if it's a delete button, not a cancel button
+            // 仅处理删除操作，不处理取消
             if ($(this).hasClass('btn-danger')) {
                 if (confirm('Are you sure you want to delete this product?')) {
                     var row = $(this).closest('tr');
@@ -282,7 +282,7 @@
                         },
                         success: function(response){
                             if(response.status === 'success'){
-                                fetchProducts();  // Refresh table
+                                fetchProducts();  // 刷新表格
                             } else {
                                 alert('Failed to delete the product: ' + response.message);
                             }
@@ -292,7 +292,7 @@
             }
         });
 
-        // Handle Add button click (delegated)
+        // 处理“Add”按钮点击事件（委托）
         $('#product-table').on('click', '#add-btn', function(){
             var name = $('#add-name').val().trim();
             var description = $('#add-description').val().trim();
@@ -316,12 +316,12 @@
                 },
                 success: function(response){
                     if(response.status === 'success'){
-                        // Clear input fields
+                        // 清空输入框
                         $('#add-name').val('');
                         $('#add-description').val('');
                         $('#add-price').val('');
                         $('#add-quantity').val('');
-                        fetchProducts();  // Refresh table
+                        fetchProducts();  // 刷新表格
                     } else {
                         alert('Failed to add the product: ' + response.message);
                     }
@@ -329,24 +329,24 @@
             });
         });
 
-        // Handle search input events
+        // 处理搜索输入事件
         $('#search-name, #search-description').on('input', function(){
             fetchProducts();
         });
 
-        // Handle sort buttons click
+        // 处理排序按钮点击事件
         $('.sort-btn, .sort-reset-btn').click(function(){
             var sortBtn = $(this);
             var sortBy = sortBtn.data('sort');
             var order = sortBtn.data('order');
 
             if(order === 'default'){
-                // Reset sorting: set sort_by to 'id' and order to 'asc'
+                // 重置排序：设置 sort_by 为 'id' 和 order 为 'asc'
                 $('.sort-btn, .sort-reset-btn').removeClass('active');
                 sortBy = 'id';
                 order = 'asc';
             } else {
-                // Activate the current sort button, deactivate others
+                // 激活当前排序按钮，取消其他排序按钮的激活状态
                 $('.sort-btn').removeClass('active');
                 sortBtn.addClass('active');
             }
@@ -354,7 +354,7 @@
             fetchProducts();
         });
 
-        // Initial load
+        // 初始加载产品数据
         fetchProducts();
     });
 </script>
