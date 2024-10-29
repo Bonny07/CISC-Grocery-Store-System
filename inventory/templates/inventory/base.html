@@ -1,26 +1,54 @@
+<!-- templates/inventory/base.html -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Grocery Store{% endblock %}</title>
+    <title>{% block title %}Grocery Store Management System{% endblock %}</title>
+    <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Custom styles */
+        .nav-right {
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'product_list' %}">Grocery Store</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto nav-right">
+                {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Personnel Management</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </nav>
 
-    <div class="container mt-4">
+    <!-- Main Content -->
+    <div class="container">
         {% block content %}
         {% endblock %}
     </div>
 
+    <!-- Include jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
     {% block scripts %}
     {% endblock %}
 </body>
