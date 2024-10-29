@@ -4,49 +4,62 @@
 <html>
 <head>
     <title>{% block title %}Grocery Store Management System{% endblock %}</title>
-    <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Custom styles */
         .nav-right {
             margin-left: auto;
+        }
+        .btn-custom {
+            margin-left: 5px;
+        }
+        .logged-in-user {
+            margin-right: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'product_list' %}">Grocery Store</a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto nav-right">
                 {% if user.is_authenticated %}
+                    <span class="navbar-text logged-in-user">
+                        Logged in as {{ user.username }}
+                    </span>
                     {% if user.is_staff %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Personnel Management</a>
-                        </li>
+                        {% if request.resolver_match.url_name == 'personnel_management' %}
+                            <li class="nav-item">
+                                <a class="btn btn-warning btn-custom" href="{% url 'product_list' %}">Return</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-custom" href="{% url 'personnel_management' %}">Personnel Management</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        <a class="btn btn-danger btn-custom" href="{% url 'logout' %}">Logout</a>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="btn btn-primary btn-custom" href="{% url 'login' %}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        <a class="btn btn-secondary btn-custom" href="{% url 'register' %}">Register</a>
                     </li>
                 {% endif %}
             </ul>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- 主内容 -->
     <div class="container">
         {% block content %}
         {% endblock %}
     </div>
 
-    <!-- Include jQuery and Bootstrap JS -->
+    <!-- 引入jQuery和Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     {% block scripts %}
