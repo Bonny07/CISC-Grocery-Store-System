@@ -1,0 +1,399 @@
+<!-- inventory/templates/inventory/product_list.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product List</title>
+    <!-- Include Bootstrap for better styling (optional) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Custom styles for better appearance */
+        .table-container {
+            margin: 20px;
+        }
+        .action-btn {
+            margin-right: 5px;
+        }
+        .search-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .sort-btn, .sort-reset-btn {
+            margin-left: 5px;
+            padding: 0;
+            line-height: 1;
+            font-size: 0.8em;
+        }
+        .sort-btn.active {
+            font-weight: bold;
+        }
+        .editable {
+            background-color: #f9f9f9;
+        }
+        #chart-container {
+            width: 50%;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container table-container">
+        <h1 class="mb-4">Product List</h1>
+        <table class="table table-bordered" id="product-table">
+            <thead class="thead-light">
+                <!-- Search and Sort Row -->
+                <tr>
+                    <th>
+                        Name
+                        <input type="text" id="search-name" class="form-control form-control-sm search-input mt-1" placeholder="Search Name">
+                    </th>
+                    <th>
+                        Description
+                        <input type="text" id="search-description" class="form-control form-control-sm search-input mt-1" placeholder="Search Description">
+                    </th>
+                    <th>
+                        Price ($)
+                        <div class="mt-1">
+                            <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="asc">&#9650;</button>
+                            <button class="btn btn-sm btn-link sort-reset-btn" data-sort="price" data-order="default">↻</button>
+                            <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="desc">&#9660;</button>
+                        </div>
+                    </th>
+                    <th>
+                        Stock
+                        <div class="mt-1">
+                            <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="asc">&#9650;</button>
+                            <button class="btn btn-sm btn-link sort-reset-btn" data-sort="quantity" data-order="default">↻</button>
+                            <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="desc">&#9660;</button>
+                        </div>
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr data-id="{{ product.id }}">
+                    <td class="name">{{ product.name }}</td>
+                    <td class="description">{{ product.description }}</td>
+                    <td class="price">{{ product.price }}</td>
+                    <td class="quantity">{{ product.quantity }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                <!-- Add New Product Row -->
+                <tr id="add-row">
+                    <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
+                    <td><input type="text" class="form-control form-control-sm" id="add-description" placeholder="Description"></td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm" id="add-price" placeholder="Price"></td>
+                    <td><input type="number" class="form-control form-control-sm" id="add-quantity" placeholder="Stock"></td>
+                    <td>
+                        <button class="btn btn-sm btn-success" id="add-btn">Add</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Chart Container -->
+        <div id="chart-container">
+            <canvas id="inventory-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Include jQuery and Bootstrap JS for modal functionality (optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom JavaScript for handling Add/Edit/Delete and Search/Sort -->
+    <script>
+        // Function to build table rows
+        function buildTableRows(products) {
+            var tbody = '';
+            if (products.length === 0) {
+                tbody = '<tr><td colspan="5" class="text-center">No products available.</td></tr>';
+            } else {
+                for (var i = 0; i < products.length; i++) {
+                    tbody += '<tr data-id="' + products[i].id + '">';
+                    tbody += '<td class="name">' + products[i].name + '</td>';
+                    tbody += '<td class="description">' + products[i].description + '</td>';
+                    tbody += '<td class="price">' + products[i].price + '</td>';
+                    tbody += '<td class="quantity">' + products[i].quantity + '</td>';
+                    tbody += '<td>';
+                    tbody += '<button class="btn btn-sm btn-info edit-btn">Edit</button> ';
+                    tbody += '<button class="btn btn-sm btn-danger delete-btn">Delete</button>';
+                    tbody += '</td>';
+                    tbody += '</tr>';
+                }
+            }
+            // Keep the add row
+            tbody += `
+                <tr id="add-row">
+                    <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
+                    <td><input type="text" class="form-control form-control-sm" id="add-description" placeholder="Description"></td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm" id="add-price" placeholder="Price"></td>
+                    <td><input type="number" class="form-control form-control-sm" id="add-quantity" placeholder="Stock"></td>
+                    <td>
+                        <button class="btn btn-sm btn-success" id="add-btn">Add</button>
+                    </td>
+                </tr>
+            `;
+            $('#product-table tbody').html(tbody);
+            // After updating the table, rebind the chart
+            renderChart(products);
+        }
+
+        // Function to fetch products based on search and sort
+        function fetchProducts() {
+            var searchName = $('#search-name').val();
+            var searchDescription = $('#search-description').val();
+            var sortBy = '';
+            var order = '';
+
+            // Get the active sort button
+            var sortBtn = $('.sort-btn.active');
+            if (sortBtn.length > 0) {
+                sortBy = sortBtn.data('sort');
+                order = sortBtn.data('order');
+            }
+
+            // If sort_reset-btn is clicked, reset sort
+            $('.sort-reset-btn').each(function(){
+                if($(this).hasClass('active')){
+                    sortBy = 'id';
+                    order = 'asc';
+                }
+            });
+
+            $.ajax({
+                url: '{% url "product_list_ajax" %}',
+                type: 'GET',
+                data: {
+                    'search_name': searchName,
+                    'search_description': searchDescription,
+                    'sort_by': sortBy,
+                    'order': order,
+                },
+                success: function(response){
+                    if(response.status === 'success'){
+                        buildTableRows(response.products);
+                    } else {
+                        alert('Failed to fetch products.');
+                    }
+                }
+            });
+        }
+
+        // Function to render the pie chart
+        function renderChart(products) {
+            var ctx = document.getElementById('inventory-chart').getContext('2d');
+            var labels = [];
+            var data = [];
+            var backgroundColors = [];
+
+            products.forEach(function(product){
+                labels.push(product.name);
+                data.push(product.quantity);
+                backgroundColors.push(getRandomColor());
+            });
+
+            // Destroy existing chart if it exists
+            if(window.inventoryChart instanceof Chart){
+                window.inventoryChart.destroy();
+            }
+
+            window.inventoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Inventory Overview'
+                    }
+                }
+            });
+        }
+
+        // Function to generate random colors for the pie chart
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++ ) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        $(document).ready(function(){
+            // Handle Edit button click (delegated)
+            $('#product-table').on('click', '.edit-btn', function(){
+                var row = $(this).closest('tr');
+                var productId = row.data('id');
+
+                // If already in edit mode, do nothing
+                if(row.hasClass('editing')) return;
+
+                // Set editing flag
+                row.addClass('editing');
+
+                // Get current values
+                var name = row.find('.name').text();
+                var description = row.find('.description').text();
+                var price = row.find('.price').text();
+                var quantity = row.find('.quantity').text();
+
+                // Replace text with input fields
+                row.find('.name').html('<input type="text" class="form-control form-control-sm" value="' + name + '">');
+                row.find('.description').html('<input type="text" class="form-control form-control-sm" value="' + description + '">');
+                row.find('.price').html('<input type="number" step="0.01" class="form-control form-control-sm" value="' + price + '">');
+                row.find('.quantity').html('<input type="number" class="form-control form-control-sm" value="' + quantity + '">');
+
+                // Change buttons
+                $(this).text('Save').removeClass('btn-info').addClass('btn-success save-btn');
+                row.find('.delete-btn').text('Cancel').removeClass('btn-danger').addClass('btn-secondary cancel-btn');
+            });
+
+            // Handle Save button click (delegated)
+            $('#product-table').on('click', '.save-btn', function(){
+                var row = $(this).closest('tr');
+                var productId = row.data('id');
+                var name = row.find('.name input').val().trim();
+                var description = row.find('.description input').val().trim();
+                var price = row.find('.price input').val();
+                var quantity = row.find('.quantity input').val();
+
+                if(name === '' || price === '' || quantity === ''){
+                    alert('Please fill in all required fields (Name, Price, Stock).');
+                    return;
+                }
+
+                $.ajax({
+                    url: '{% url "product_update_ajax" %}',
+                    type: 'POST',
+                    data: {
+                        'id': productId,
+                        'name': name,
+                        'description': description,
+                        'price': price,
+                        'quantity': quantity,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response){
+                        if(response.status === 'success'){
+                            fetchProducts();  // Refresh table
+                        } else {
+                            alert('Failed to save the product: ' + response.message);
+                        }
+                    }
+                });
+            });
+
+            // Handle Cancel button click (delegated)
+            $('#product-table').on('click', '.cancel-btn', function(){
+                fetchProducts();  // Refresh table to cancel editing
+            });
+
+            // Handle Delete button click (delegated)
+            $('#product-table').on('click', '.delete-btn', function(){
+                // Only handle delete if it's a delete button, not a cancel button
+                if ($(this).hasClass('btn-danger')) {
+                    if (confirm('Are you sure you want to delete this product?')) {
+                        var row = $(this).closest('tr');
+                        var productId = row.data('id');
+                        $.ajax({
+                            url: '{% url "product_delete_ajax" %}',
+                            type: 'POST',
+                            data: {
+                                'id': productId,
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            success: function(response){
+                                if(response.status === 'success'){
+                                    fetchProducts();  // Refresh table
+                                } else {
+                                    alert('Failed to delete the product: ' + response.message);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Handle Add button click (delegated)
+            $('#product-table').on('click', '#add-btn', function(){
+                var name = $('#add-name').val().trim();
+                var description = $('#add-description').val().trim();
+                var price = $('#add-price').val();
+                var quantity = $('#add-quantity').val();
+
+                if(name === '' || price === '' || quantity === ''){
+                    alert('Please fill in all required fields (Name, Price, Stock).');
+                    return;
+                }
+
+                $.ajax({
+                    url: '{% url "product_create_ajax" %}',
+                    type: 'POST',
+                    data: {
+                        'name': name,
+                        'description': description,
+                        'price': price,
+                        'quantity': quantity,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response){
+                        if(response.status === 'success'){
+                            // Clear input fields
+                            $('#add-name').val('');
+                            $('#add-description').val('');
+                            $('#add-price').val('');
+                            $('#add-quantity').val('');
+                            fetchProducts();  // Refresh table
+                        } else {
+                            alert('Failed to add the product: ' + response.message);
+                        }
+                    }
+                });
+            });
+
+            // Handle search input events
+            $('#search-name, #search-description').on('input', function(){
+                fetchProducts();
+            });
+
+            // Handle sort buttons click
+            $('.sort-btn, .sort-reset-btn').click(function(){
+                var sortBtn = $(this);
+                var sortBy = sortBtn.data('sort');
+                var order = sortBtn.data('order');
+
+                if(order === 'default'){
+                    // Reset sorting: set sort_by to 'id' and order to 'asc'
+                    $('.sort-btn, .sort-reset-btn').removeClass('active');
+                    sortBy = 'id';
+                    order = 'asc';
+                } else {
+                    // Activate the current sort button, deactivate others
+                    $('.sort-btn').removeClass('active');
+                    sortBtn.addClass('active');
+                }
+
+                fetchProducts();
+            });
+
+            // Initial load
+            fetchProducts();
+        });
+    </script>
+</body>
+</html>
