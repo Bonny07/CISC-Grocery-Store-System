@@ -1,4 +1,3 @@
-# inventory/views.py
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -6,7 +5,7 @@ from .models import Product
 from .forms import RegistrationForm, LoginForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User  # 确保已导入User模型
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
@@ -28,10 +27,10 @@ def login_view(request):
         if form.is_valid():
             username_or_email = form.cleaned_data['username_or_email']
             password = form.cleaned_data['password']
-            # 尝试通过用户名进行认证
+
             user = authenticate(request, username=username_or_email, password=password)
             if not user:
-                # 如果通过用户名认证失败，尝试通过邮箱认证
+
                 try:
                     user_obj = User.objects.get(email=username_or_email)
                     user = authenticate(request, username=user_obj.username, password=password)
@@ -128,15 +127,14 @@ def product_delete_ajax(request):
 @login_required
 def product_list_ajax(request):
     if request.method == 'GET':
-        # 获取搜索参数
+
         search_name = request.GET.get('search_name', '').strip()
         search_description = request.GET.get('search_description', '').strip()
 
-        # 获取排序参数
-        sort_by = request.GET.get('sort_by', 'id')  # 默认按id排序
-        order = request.GET.get('order', 'asc')  # 默认升序
+        sort_by = request.GET.get('sort_by', 'id')
+        order = request.GET.get('order', 'asc')
 
-        # 构建查询集
+
         products = Product.objects.all()
 
         if search_name or search_description:
@@ -144,15 +142,14 @@ def product_list_ajax(request):
                 Q(name__icontains=search_name) | Q(description__icontains=search_description)
             )
 
-        # 处理排序
         if sort_by in ['price', 'quantity']:
             if order == 'desc':
                 sort_by = '-' + sort_by
             products = products.order_by(sort_by)
         else:
-            products = products.order_by('id')  # 默认排序
+            products = products.order_by('id')
 
-        # 序列化数据
+
         products_data = []
         for product in products:
             products_data.append({
@@ -167,7 +164,6 @@ def product_list_ajax(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
 
-# 新增人员管理视图
 @user_passes_test(lambda u: u.is_staff)
 @login_required
 def personnel_management(request):
@@ -202,7 +198,6 @@ def personnel_update_ajax(request):
         email = request.POST.get('email')
         is_admin = request.POST.get('is_admin') == 'true'
 
-        # 防止管理员修改自身的权限
         if request.user.id == int(user_id) and not is_admin:
             return JsonResponse({'status': 'error', 'message': 'Cannot remove your own admin status.'})
 
@@ -225,7 +220,7 @@ def personnel_delete_ajax(request):
     if request.method == 'POST':
         user_id = request.POST.get('id')
 
-        # 防止管理员删除自身
+
         if request.user.id == int(user_id):
             return JsonResponse({'status': 'error', 'message': 'Cannot delete yourself.'})
 

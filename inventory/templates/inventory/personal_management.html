@@ -1,5 +1,3 @@
-<!-- templates/inventory/personnel_management.html -->
-
 {% extends 'inventory/base.html' %}
 
 {% block title %}Personnel Management{% endblock %}
@@ -16,15 +14,13 @@
         </tr>
     </thead>
     <tbody>
-        <!-- 动态填充人员数据 -->
     </tbody>
 </table>
 {% endblock %}
 
 {% block scripts %}
-<!-- 引入Chart.js或其他需要的库，如果有的话 -->
 <script>
-    // 构建人员表格行的函数
+
     function buildPersonnelRows(users) {
         var tbody = '';
         if (users.length === 0) {
@@ -45,7 +41,6 @@
         $('#personnel-table tbody').html(tbody);
     }
 
-    // 获取人员列表的函数
     function fetchPersonnel() {
         $.ajax({
             url: '{% url "personnel_list_ajax" %}',
@@ -60,38 +55,30 @@
         });
     }
 
-    // 渲染人员管理表格
     $(document).ready(function(){
-        // 初始加载人员数据
+
         fetchPersonnel();
 
-        // 处理“Edit”按钮点击事件（委托）
         $('#personnel-table').on('click', '.edit-btn', function(){
             var row = $(this).closest('tr');
             var userId = row.data('id');
 
-            // 如果已经在编辑模式，跳过
             if(row.hasClass('editing')) return;
 
-            // 设置编辑标志
             row.addClass('editing');
 
-            // 获取当前值
             var username = row.find('.username').text();
             var email = row.find('.email').text();
             var isAdmin = row.find('.is_admin').text() === 'Yes';
 
-            // 替换文本为输入框和复选框
             row.find('.username').html('<input type="text" class="form-control form-control-sm" value="' + username + '">');
             row.find('.email').html('<input type="email" class="form-control form-control-sm" value="' + email + '">');
             row.find('.is_admin').html('<input type="checkbox" class="form-check-input" ' + (isAdmin ? 'checked' : '') + '>');
 
-            // 更改按钮文本和样式
             $(this).text('Save').removeClass('btn-info').addClass('btn-success save-btn');
             row.find('.delete-btn').text('Cancel').removeClass('btn-danger').addClass('btn-secondary cancel-btn');
         });
 
-        // 处理“Save”按钮点击事件（委托）
         $('#personnel-table').on('click', '.save-btn', function(){
             var row = $(this).closest('tr');
             var userId = row.data('id');
@@ -104,7 +91,6 @@
                 return;
             }
 
-            // 发送AJAX请求更新人员信息
             $.ajax({
                 url: '{% url "personnel_update_ajax" %}',
                 type: 'POST',
@@ -117,7 +103,7 @@
                 },
                 success: function(response){
                     if(response.status === 'success'){
-                        fetchPersonnel();  // 刷新人员列表
+                        fetchPersonnel();
                     } else {
                         alert('Failed to update personnel: ' + response.message);
                     }
@@ -125,17 +111,14 @@
             });
         });
 
-        // 处理“Cancel”按钮点击事件（委托）
         $('#personnel-table').on('click', '.cancel-btn', function(){
-            fetchPersonnel();  // 刷新人员列表以取消编辑
+            fetchPersonnel();
         });
 
-        // 处理“Delete”按钮点击事件（委托）
         $('#personnel-table').on('click', '.delete-btn', function(){
             var row = $(this).closest('tr');
             var userId = row.data('id');
 
-            // 确认删除操作
             if (confirm('Are you sure you want to delete this personnel?')) {
                 $.ajax({
                     url: '{% url "personnel_delete_ajax" %}',
@@ -146,7 +129,7 @@
                     },
                     success: function(response){
                         if(response.status === 'success'){
-                            fetchPersonnel();  // 刷新人员列表
+                            fetchPersonnel();
                         } else {
                             alert('Failed to delete personnel: ' + response.message);
                         }
