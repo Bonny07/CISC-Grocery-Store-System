@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from .models import Product
@@ -134,7 +133,6 @@ def product_list_ajax(request):
         sort_by = request.GET.get('sort_by', 'id')
         order = request.GET.get('order', 'asc')
 
-
         products = Product.objects.all()
 
         if search_name or search_description:
@@ -148,7 +146,6 @@ def product_list_ajax(request):
             products = products.order_by(sort_by)
         else:
             products = products.order_by('id')
-
 
         products_data = []
         for product in products:
@@ -220,7 +217,6 @@ def personnel_delete_ajax(request):
     if request.method == 'POST':
         user_id = request.POST.get('id')
 
-
         if request.user.id == int(user_id):
             return JsonResponse({'status': 'error', 'message': 'Cannot delete yourself.'})
 
@@ -231,3 +227,27 @@ def personnel_delete_ajax(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+
+import csv
+from django.http import HttpResponse
+
+
+@login_required
+def export_products_csv(request):
+    # 创建 HttpResponse 对象，设置内容类型为 CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="products.csv"'
+
+    # 创建 CSV writer
+    writer = csv.writer(response)
+    # 写入表头
+    writer.writerow(['Name', 'Description', 'Price', 'Quantity'])
+
+    # 获取所有产品
+    products = Product.objects.all()
+    # 写入产品数据
+    for product in products:
+        writer.writerow([product.name, product.description, product.price, product.quantity])
+
+    return response
