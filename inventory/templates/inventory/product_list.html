@@ -78,7 +78,11 @@
             tbody = '<tr><td colspan="5" class="text-center">No products available.</td></tr>';
         } else {
             for (var i = 0; i < products.length; i++) {
-                tbody += '<tr data-id="' + products[i].id + '">';
+                var lowStockClass = '';
+                if (products[i].quantity <= 10) {
+                    lowStockClass = 'table-warning';
+                }
+                tbody += '<tr data-id="' + products[i].id + '" class="' + lowStockClass + '">';
                 tbody += '<td class="name">' + products[i].name + '</td>';
                 tbody += '<td class="description">' + products[i].description + '</td>';
                 tbody += '<td class="price">' + products[i].price + '</td>';
@@ -90,7 +94,6 @@
                 tbody += '</tr>';
             }
         }
-
         tbody += `
             <tr id="add-row">
                 <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
@@ -103,7 +106,6 @@
             </tr>
         `;
         $('#product-table tbody').html(tbody);
-
         renderChart(products);
     }
 
