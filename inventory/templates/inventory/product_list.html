@@ -4,60 +4,68 @@
 
 {% block content %}
 <h1 class="mt-4">Product List</h1>
+
+<div class="mb-3">
+    <a href="{% url 'export_products_csv' %}" class="btn btn-secondary">export as CSV</a>
+</div>
+
 <table class="table table-bordered" id="product-table">
     <thead class="thead-light">
 
-        <tr>
-            <th>
-                Name
-                <input type="text" id="search-name" class="form-control form-control-sm search-input mt-1" placeholder="Search Name">
-            </th>
-            <th>
-                Description
-                <input type="text" id="search-description" class="form-control form-control-sm search-input mt-1" placeholder="Search Description">
-            </th>
-            <th>
-                Price ($)
-                <div class="mt-1">
-                    <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="asc">&#9650;</button>
-                    <button class="btn btn-sm btn-link sort-reset-btn" data-sort="price" data-order="default">↻</button>
-                    <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="desc">&#9660;</button>
-                </div>
-            </th>
-            <th>
-                Stock
-                <div class="mt-1">
-                    <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="asc">&#9650;</button>
-                    <button class="btn btn-sm btn-link sort-reset-btn" data-sort="quantity" data-order="default">↻</button>
-                    <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="desc">&#9660;</button>
-                </div>
-            </th>
-            <th>Actions</th>
-        </tr>
+    <tr>
+        <th>
+            Name
+            <input type="text" id="search-name" class="form-control form-control-sm search-input mt-1"
+                   placeholder="Search Name">
+        </th>
+        <th>
+            Description
+            <input type="text" id="search-description" class="form-control form-control-sm search-input mt-1"
+                   placeholder="Search Description">
+        </th>
+        <th>
+            Price ($)
+            <div class="mt-1">
+                <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="asc">&#9650;</button>
+                <button class="btn btn-sm btn-link sort-reset-btn" data-sort="price" data-order="default">↻</button>
+                <button class="btn btn-sm btn-link sort-btn" data-sort="price" data-order="desc">&#9660;</button>
+            </div>
+        </th>
+        <th>
+            Stock
+            <div class="mt-1">
+                <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="asc">&#9650;</button>
+                <button class="btn btn-sm btn-link sort-reset-btn" data-sort="quantity" data-order="default">↻</button>
+                <button class="btn btn-sm btn-link sort-btn" data-sort="quantity" data-order="desc">&#9660;</button>
+            </div>
+        </th>
+        <th>Actions</th>
+    </tr>
     </thead>
     <tbody>
-        {% for product in products %}
-        <tr data-id="{{ product.id }}">
-            <td class="name">{{ product.name }}</td>
-            <td class="description">{{ product.description }}</td>
-            <td class="price">{{ product.price }}</td>
-            <td class="quantity">{{ product.quantity }}</td>
-            <td>
-                <button class="btn btn-sm btn-info edit-btn">Edit</button>
-                <button class="btn btn-sm btn-danger delete-btn">Delete</button>
-            </td>
-        </tr>
-        {% endfor %}
+    {% for product in products %}
+    <tr data-id="{{ product.id }}">
+        <td class="name">{{ product.name }}</td>
+        <td class="description">{{ product.description }}</td>
+        <td class="price">{{ product.price }}</td>
+        <td class="quantity">{{ product.quantity }}</td>
+        <td>
+            <button class="btn btn-sm btn-info edit-btn">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+        </td>
+    </tr>
+    {% endfor %}
 
-        <tr id="add-row">
-            <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
-            <td><input type="text" class="form-control form-control-sm" id="add-description" placeholder="Description"></td>
-            <td><input type="number" step="0.01" class="form-control form-control-sm" id="add-price" placeholder="Price"></td>
-            <td><input type="number" class="form-control form-control-sm" id="add-quantity" placeholder="Stock"></td>
-            <td>
-                <button class="btn btn-sm btn-success" id="add-btn">Add</button>
-            </td>
-        </tr>
+    <tr id="add-row">
+        <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
+        <td><input type="text" class="form-control form-control-sm" id="add-description" placeholder="Description"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm" id="add-price" placeholder="Price">
+        </td>
+        <td><input type="number" class="form-control form-control-sm" id="add-quantity" placeholder="Stock"></td>
+        <td>
+            <button class="btn btn-sm btn-success" id="add-btn">Add</button>
+        </td>
+    </tr>
     </tbody>
 </table>
 
@@ -94,6 +102,7 @@
                 tbody += '</tr>';
             }
         }
+        // 保留添加产品的行
         tbody += `
             <tr id="add-row">
                 <td><input type="text" class="form-control form-control-sm" id="add-name" placeholder="Name"></td>
@@ -106,6 +115,7 @@
             </tr>
         `;
         $('#product-table tbody').html(tbody);
+        // 更新饼图
         renderChart(products);
     }
 
@@ -124,8 +134,8 @@
         }
 
 
-        $('.sort-reset-btn').each(function(){
-            if($(this).hasClass('active')){
+        $('.sort-reset-btn').each(function () {
+            if ($(this).hasClass('active')) {
                 sortBy = 'id';
                 order = 'asc';
             }
@@ -140,8 +150,8 @@
                 'sort_by': sortBy,
                 'order': order,
             },
-            success: function(response){
-                if(response.status === 'success'){
+            success: function (response) {
+                if (response.status === 'success') {
                     buildTableRows(response.products);
                 } else {
                     alert('Failed to fetch products.');
@@ -157,14 +167,14 @@
         var data = [];
         var backgroundColors = [];
 
-        products.forEach(function(product){
+        products.forEach(function (product) {
             labels.push(product.name);
             data.push(product.quantity);
             backgroundColors.push(getRandomColor());
         });
 
 
-        if(window.inventoryChart instanceof Chart){
+        if (window.inventoryChart instanceof Chart) {
             window.inventoryChart.destroy();
         }
 
@@ -191,20 +201,20 @@
     function getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
-        for (var i = 0; i < 6; i++ ) {
+        for (var i = 0; i < 6; i++) {
             color += letters[Math.floor(Math.random() * 16)];
         }
         return color;
     }
 
-    $(document).ready(function(){
+    $(document).ready(function () {
 
-        $('#product-table').on('click', '.edit-btn', function(){
+        $('#product-table').on('click', '.edit-btn', function () {
             var row = $(this).closest('tr');
             var productId = row.data('id');
 
 
-            if(row.hasClass('editing')) return;
+            if (row.hasClass('editing')) return;
 
             row.addClass('editing');
 
@@ -226,7 +236,7 @@
         });
 
 
-        $('#product-table').on('click', '.save-btn', function(){
+        $('#product-table').on('click', '.save-btn', function () {
             var row = $(this).closest('tr');
             var productId = row.data('id');
             var name = row.find('.name input').val().trim();
@@ -234,7 +244,7 @@
             var price = row.find('.price input').val();
             var quantity = row.find('.quantity input').val();
 
-            if(name === '' || price === '' || quantity === ''){
+            if (name === '' || price === '' || quantity === '') {
                 alert('Please fill in all required fields (Name, Price, Stock).');
                 return;
             }
@@ -250,8 +260,8 @@
                     'quantity': quantity,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
-                success: function(response){
-                    if(response.status === 'success'){
+                success: function (response) {
+                    if (response.status === 'success') {
                         fetchProducts();
                     } else {
                         alert('Failed to save the product: ' + response.message);
@@ -261,12 +271,12 @@
         });
 
 
-        $('#product-table').on('click', '.cancel-btn', function(){
+        $('#product-table').on('click', '.cancel-btn', function () {
             fetchProducts();
         });
 
 
-        $('#product-table').on('click', '.delete-btn', function(){
+        $('#product-table').on('click', '.delete-btn', function () {
 
             if ($(this).hasClass('btn-danger')) {
                 if (confirm('Are you sure you want to delete this product?')) {
@@ -279,8 +289,8 @@
                             'id': productId,
                             'csrfmiddlewaretoken': '{{ csrf_token }}'
                         },
-                        success: function(response){
-                            if(response.status === 'success'){
+                        success: function (response) {
+                            if (response.status === 'success') {
                                 fetchProducts();
                             } else {
                                 alert('Failed to delete the product: ' + response.message);
@@ -292,13 +302,13 @@
         });
 
 
-        $('#product-table').on('click', '#add-btn', function(){
+        $('#product-table').on('click', '#add-btn', function () {
             var name = $('#add-name').val().trim();
             var description = $('#add-description').val().trim();
             var price = $('#add-price').val();
             var quantity = $('#add-quantity').val();
 
-            if(name === '' || price === '' || quantity === ''){
+            if (name === '' || price === '' || quantity === '') {
                 alert('Please fill in all required fields (Name, Price, Stock).');
                 return;
             }
@@ -313,8 +323,8 @@
                     'quantity': quantity,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
-                success: function(response){
-                    if(response.status === 'success'){
+                success: function (response) {
+                    if (response.status === 'success') {
 
                         $('#add-name').val('');
                         $('#add-description').val('');
@@ -329,17 +339,17 @@
         });
 
 
-        $('#search-name, #search-description').on('input', function(){
+        $('#search-name, #search-description').on('input', function () {
             fetchProducts();
         });
 
 
-        $('.sort-btn, .sort-reset-btn').click(function(){
+        $('.sort-btn, .sort-reset-btn').click(function () {
             var sortBtn = $(this);
             var sortBy = sortBtn.data('sort');
             var order = sortBtn.data('order');
 
-            if(order === 'default'){
+            if (order === 'default') {
 
                 $('.sort-btn, .sort-reset-btn').removeClass('active');
                 sortBy = 'id';

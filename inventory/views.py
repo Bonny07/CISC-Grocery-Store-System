@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from .models import Product
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, UserProfileForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -210,6 +210,21 @@ def personnel_update_ajax(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
 
+@login_required
+def export_products_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="products.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Name', 'Description', 'Price', 'Quantity'])
+
+    products = Product.objects.all()
+
+    for product in products:
+        writer.writerow([product.name, product.description, product.price, product.quantity])
+
+    return response
+
+
 @csrf_exempt
 @user_passes_test(lambda u: u.is_staff)
 @login_required
@@ -235,19 +250,42 @@ from django.http import HttpResponse
 
 @login_required
 def export_products_csv(request):
-    # 创建 HttpResponse 对象，设置内容类型为 CSV
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="products.csv"'
 
-    # 创建 CSV writer
     writer = csv.writer(response)
-    # 写入表头
+
     writer.writerow(['Name', 'Description', 'Price', 'Quantity'])
 
-    # 获取所有产品
     products = Product.objects.all()
-    # 写入产品数据
     for product in products:
         writer.writerow([product.name, product.description, product.price, product.quantity])
 
     return response
+
+
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+
+
+@login_required
+def user_profile(request):
+    if request.method == 'POST':
+        profile_form = UserProfileForm(request.POST, instance=request.user)
+        password_form = PasswordChangeForm(user=request.user, data=request.POST)
+        if profile_form.is_valid() and password_form.is_valid():
+            profile_form.save()
+            password_form.save()
+            update_session_auth_hash(request, password_form.user)
+            messages.success(request, 'Your profile and password have been updated successfully.')
+            return redirect('user_profile')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        profile_form = UserProfileForm(instance=request.user)
+        password_form = PasswordChangeForm(user=request.user)
+    return render(request, 'inventory/user_profile.html', {
+        'profile_form': profile_form,
+        'password_form': password_form,
+    })

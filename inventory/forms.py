@@ -1,7 +1,7 @@
-
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
+
 
 class RegistrationForm(forms.ModelForm):
     email = forms.EmailField(required=True)
@@ -21,6 +21,22 @@ class RegistrationForm(forms.ModelForm):
             user.save()
         return user
 
+
 class LoginForm(forms.Form):
     username_or_email = forms.CharField(label='Username or Email')
     password = forms.CharField(widget=forms.PasswordInput)
+
+
+# inventory/forms.py
+
+
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.models import User
+
+
+class UserProfileForm(UserChangeForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+        # 不显示密码字段
+        exclude = ['password']
